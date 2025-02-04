@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Level</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            touch-action: none;
+        }
+        #levelContainer {
+            width: 250px;
+            height: 250px;
+            border: 3px solid #333;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+        #bubble {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(0, 123, 255, 0.7);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease;
+        }
+        #angleDisplay {
+            text-align: center;
+            font-size: 18px;
+        }
+        #levelStatus {
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 20px;
+        }
+        .level-ok {
+            color: green;
+        }
+        .level-not-ok {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Level</h1>
+    <div id="levelContainer">
+        <div id="bubble"></div>
+    </div>
+    <div id="angleDisplay">
+        <p>X Angle: <span id="xAngle">0.00</span>°</p>
+        <p>Y Angle: <span id="yAngle">0.00</span>°</p>
+        <p id="levelStatus" class="level-not-ok">NOT LEVEL</p>
+    </div>
+
+    <script>
+        const bubble = document.getElementById('bubble');
+        const xAngleDisplay = document.getElementById('xAngle');
+        const yAngleDisplay = document.getElementById('yAngle');
+        const levelStatus = document.getElementById('levelStatus');
+        const levelContainer = document.getElementById('levelContainer');
+
+        // Prevent default touch behaviors
+        document.body.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+        // Check for device orientation support
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', handleOrientation);
+        } else {
+            levelStatus.textContent = 'Not supported';
+        }
+
+        function handleOrientation(event) {
+            // Extract beta (X-axis) and gamma (Y-axis) rotations
+            const betaAngle = event.beta || 0;  // Front to back tilt (-180 to 180)
+            const gammaAngle = event.gamma || 0;  // Left to right tilt (-90 to 90)
+
+            // Update angle displays
+            xAngleDisplay.textContent = betaAngle.toFixed(2);
+            yAngleDisplay.textContent = gammaAngle.toFixed(2);
+
+            // Calculate bubble position (scaled down for visual representation)
+            const containerWidth = levelContainer.offsetWidth;
+            const containerHeight = levelContainer.offsetHeight;
+            const bubbleWidth = bubble.offsetWidth;
+            const bubbleHeight = bubble.offsetHeight;
+
+            // Limit movement to container boundaries
+            const maxMoveX = (containerWidth - bubbleWidth) / 2;
+            const maxMoveY = (containerHeight - bubbleHeight) / 2;
+
+            // Scale angles to bubble movement
+            const moveX = Math.max(-maxMoveX, Math.min(maxMoveX, gammaAngle * 5));
+            const moveY = Math.max(-maxMoveY, Math.min(maxMoveY, betaAngle * 5));
+
+            // Move bubble
+            bubble.style.transform = `translate(${moveX}px, ${moveY}px)`;
+
+            // Check if level
+            if (Math.abs(betaAngle) < 2 && Math.abs(gammaAngle) < 2) {
+                levelStatus.textContent = 'LEVEL';
+                levelStatus.className = 'level-ok';
+            } else {
+                levelStatus.textContent = 'NOT LEVEL';
+                levelStatus.className = 'level-not-ok';
+            }
+        }
+    </script>
+</body>
+</html>
