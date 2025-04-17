@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Full-Screen Clock</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+        
+        .clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            width: 90vw;
+            text-align: center;
+        }
+        
+        .time {
+            font-size: 15vmin;
+            font-weight: 800;
+            margin-bottom: 2vh;
+            letter-spacing: -0.03em;
+        }
+        
+        .date {
+            font-size: 5vmin;
+            font-weight: 700;
+            margin-bottom: 4vh;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        select {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            outline: none;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        .theme-toggle, .time-only-toggle {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .fullscreen-button {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        /* Light theme */
+        body.light-theme {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        body.light-theme select {
+            background: rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+        
+        body.light-theme .theme-toggle,
+        body.light-theme .fullscreen-button,
+        body.light-theme .time-only-toggle {
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            color: #333;
+        }
+        
+        .time-only-mode .date-container {
+            display: none;
+        }
+        
+        .time-only-mode .time {
+            font-size: 20vmin;
+        }
+        
+        @media (orientation: landscape) {
+            .clock-container {
+                flex-direction: row;
+                gap: 5vw;
+            }
+            
+            .date-container {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="time" id="time">00:00:00</div>
+        <div class="date-container">
+            <div class="date" id="date">Monday, January 1</div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <select id="locale-selector">
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="fr-FR">French</option>
+            <option value="de-DE">German</option>
+            <option value="es-ES">Spanish</option>
+            <option value="it-IT">Italian</option>
+            <option value="ja-JP">Japanese</option>
+            <option value="ko-KR">Korean</option>
+            <option value="zh-CN">Chinese (Simplified)</option>
+            <option value="pt-BR">Portuguese (Brazil)</option>
+            <option value="ru-RU">Russian</option>
+            <option value="ar-SA">Arabic</option>
+            <option value="hi-IN">Hindi</option>
+        </select>
+        <button class="theme-toggle" id="theme-toggle">Toggle Dark/Light</button>
+        <button class="time-only-toggle" id="time-only-toggle">Time Only: OFF</button>
+        <button class="fullscreen-button" id="fullscreen-button">Enter Fullscreen</button>
+    </div>
+
+    <script>
+        const timeElement = document.getElementById('time');
+        const dateElement = document.getElementById('date');
+        const localeSelector = document.getElementById('locale-selector');
+        const themeToggle = document.getElementById('theme-toggle');
+        const fullscreenButton = document.getElementById('fullscreen-button');
+        const timeOnlyToggle = document.getElementById('time-only-toggle');
+        
+        // Set default locale or get from localStorage
+        let currentLocale = localStorage.getItem('clockLocale') || 'en-US';
+        localeSelector.value = currentLocale;
+        
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            
+            // Format time
+            const timeOptions = { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: currentLocale.startsWith('en')  // Use 12-hour format for English
+            };
+            timeElement.textContent = now.toLocaleTimeString(currentLocale, timeOptions);
+            
+            // Format date
+            const dateOptions = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            dateElement.textContent = now.toLocaleDateString(currentLocale, dateOptions);
+        }
+        
+        // Change locale
+        localeSelector.addEventListener('change', function() {
+            currentLocale = this.value;
+            localStorage.setItem('clockLocale', currentLocale);
+            updateClock();
+        });
+        
+        // Toggle theme
+        themeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('light-theme');
+            const isLightTheme = document.body.classList.contains('light-theme');
+            localStorage.setItem('lightTheme', isLightTheme);
+        });
+        
+        // Toggle time-only mode
+        timeOnlyToggle.addEventListener('click', function() {
+            document.body.classList.toggle('time-only-mode');
+            const isTimeOnly = document.body.classList.contains('time-only-mode');
+            localStorage.setItem('timeOnly', isTimeOnly);
+            this.textContent = `Time Only: ${isTimeOnly ? 'ON' : 'OFF'}`;
+        });
+        
+        // Fullscreen
+        fullscreenButton.addEventListener('click', function() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+                this.textContent = "Exit Fullscreen";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    this.textContent = "Enter Fullscreen";
+                }
+            }
+        });
+        
+        // Check if device is in fullscreen mode
+        document.addEventListener('fullscreenchange', function() {
+            fullscreenButton.textContent = document.fullscreenElement ? "Exit Fullscreen" : "Enter Fullscreen";
+        });
+        
+        // Load saved theme
+        if (localStorage.getItem('lightTheme') === 'true') {
+            document.body.classList.add('light-theme');
+        }
+        
+        // Load saved time-only mode
+        if (localStorage.getItem('timeOnly') === 'true') {
+            document.body.classList.add('time-only-mode');
+            timeOnlyToggle.textContent = "Time Only: ON";
+        }
+        
+        // Update clock every second
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Auto-hide controls after a few seconds of inactivity
+        const controls = document.querySelector('.controls');
+        let hideTimeout;
+        
+        function showControls() {
+            controls.style.opacity = '1';
+            controls.style.transform = 'translateY(0)';
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(hideControls, 5000);
+        }
+        
+        function hideControls() {
+            controls.style.opacity = '0';
+            controls.style.transform = 'translateY(20px)';
+        }
+        
+        // Show controls on tap/click anywhere
+        document.body.addEventListener('click', showControls);
+        
+        // Initial setup
+        controls.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        showControls();
+    </script>
+</body>
+</html>
