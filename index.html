@@ -3,120 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mobile Level</title>
+    <title>Full-Screen Clock</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+    <!-- Add NoSleep.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+        
+        .clock-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            touch-action: none;
-        }
-        #levelContainer {
-            width: 250px;
-            height: 250px;
-            border: 3px solid #333;
-            border-radius: 50%;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 20px;
-            background-color: #fff;
-        }
-        #bubble {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: rgba(0, 123, 255, 0.7);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            transition: transform 0.1s ease;
-        }
-        #angleDisplay {
+            height: 80vh;
+            width: 90vw;
             text-align: center;
-            font-size: 18px;
         }
-        #levelStatus {
-            font-weight: bold;
+        
+        .time {
+            font-size: 15vmin;
+            font-weight: 800;
+            margin-bottom: 2vh;
+            letter-spacing: -0.03em;
+        }
+        
+        .date {
+            font-size: 5vmin;
+            font-weight: 700;
+            margin-bottom: 4vh;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        select {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            outline: none;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        .theme-toggle, .time-only-toggle {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .fullscreen-button {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
             margin-top: 10px;
-            font-size: 20px;
         }
-        .level-ok {
-            color: green;
+        
+        /* Light theme */
+        body.light-theme {
+            background-color: #f5f5f5;
+            color: #333;
         }
-        .level-not-ok {
-            color: red;
+        
+        body.light-theme select {
+            background: rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+        
+        body.light-theme .theme-toggle,
+        body.light-theme .fullscreen-button,
+        body.light-theme .time-only-toggle {
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            color: #333;
+        }
+        
+        .time-only-mode .date-container {
+            display: none;
+        }
+        
+        .time-only-mode .time {
+            font-size: 20vmin;
+        }
+        
+        @media (orientation: landscape) {
+            .clock-container {
+                flex-direction: row;
+                gap: 5vw;
+            }
+            
+            .date-container {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Mobile Level</h1>
-    <div id="levelContainer">
-        <div id="bubble"></div>
+    <div class="clock-container">
+        <div class="time" id="time">00:00:00</div>
+        <div class="date-container">
+            <div class="date" id="date">Monday, January 1</div>
+        </div>
     </div>
-    <div id="angleDisplay">
-        <p>X Angle: <span id="xAngle">0.00</span>°</p>
-        <p>Y Angle: <span id="yAngle">0.00</span>°</p>
-        <p id="levelStatus" class="level-not-ok">NOT LEVEL</p>
+    
+    <div class="controls">
+        <select id="locale-selector">
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="fr-FR">French</option>
+            <option value="de-DE">German</option>
+            <option value="es-ES">Spanish</option>
+            <option value="it-IT">Italian</option>
+            <option value="ja-JP">Japanese</option>
+            <option value="ko-KR">Korean</option>
+            <option value="zh-CN">Chinese (Simplified)</option>
+            <option value="pt-BR">Portuguese (Brazil)</option>
+            <option value="ru-RU">Russian</option>
+            <option value="ar-SA">Arabic</option>
+            <option value="hi-IN">Hindi</option>
+        </select>
+        <button class="theme-toggle" id="theme-toggle">Toggle Dark/Light</button>
+        <button class="time-only-toggle" id="time-only-toggle">Time Only: OFF</button>
+        <button class="fullscreen-button" id="fullscreen-button">Enter Fullscreen</button>
+        <div style="margin-top: 5px; font-size: 12px; opacity: 0.7;">Screen will stay on while clock is displayed</div>
     </div>
 
     <script>
-        const bubble = document.getElementById('bubble');
-        const xAngleDisplay = document.getElementById('xAngle');
-        const yAngleDisplay = document.getElementById('yAngle');
-        const levelStatus = document.getElementById('levelStatus');
-        const levelContainer = document.getElementById('levelContainer');
-
-        // Prevent default touch behaviors
-        document.body.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-
-        // Check for device orientation support
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', handleOrientation);
-        } else {
-            levelStatus.textContent = 'Not supported';
+        // Initialize NoSleep.js
+        const noSleep = new NoSleep();
+        
+        const timeElement = document.getElementById('time');
+        const dateElement = document.getElementById('date');
+        const localeSelector = document.getElementById('locale-selector');
+        const themeToggle = document.getElementById('theme-toggle');
+        const fullscreenButton = document.getElementById('fullscreen-button');
+        const timeOnlyToggle = document.getElementById('time-only-toggle');
+        
+        // Set default locale or get from localStorage
+        let currentLocale = localStorage.getItem('clockLocale') || 'en-US';
+        localeSelector.value = currentLocale;
+        
+        // Enable wake lock on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enable NoSleep when the page loads
+            noSleep.enable();
+            console.log("Screen wake lock enabled");
+        });
+        
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            
+            // Format time
+            const timeOptions = { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: currentLocale.startsWith('en')  // Use 12-hour format for English
+            };
+            timeElement.textContent = now.toLocaleTimeString(currentLocale, timeOptions);
+            
+            // Format date
+            const dateOptions = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            dateElement.textContent = now.toLocaleDateString(currentLocale, dateOptions);
         }
-
-        function handleOrientation(event) {
-            // Extract beta (X-axis) and gamma (Y-axis) rotations
-            const betaAngle = event.beta || 0;  // Front to back tilt (-180 to 180)
-            const gammaAngle = event.gamma || 0;  // Left to right tilt (-90 to 90)
-
-            // Update angle displays
-            xAngleDisplay.textContent = betaAngle.toFixed(2);
-            yAngleDisplay.textContent = gammaAngle.toFixed(2);
-
-            // Calculate bubble position (scaled down for visual representation)
-            const containerWidth = levelContainer.offsetWidth;
-            const containerHeight = levelContainer.offsetHeight;
-            const bubbleWidth = bubble.offsetWidth;
-            const bubbleHeight = bubble.offsetHeight;
-
-            // Limit movement to container boundaries
-            const maxMoveX = (containerWidth - bubbleWidth) / 2;
-            const maxMoveY = (containerHeight - bubbleHeight) / 2;
-
-            // Scale angles to bubble movement
-            const moveX = Math.max(-maxMoveX, Math.min(maxMoveX, gammaAngle * 5));
-            const moveY = Math.max(-maxMoveY, Math.min(maxMoveY, betaAngle * 5));
-
-            // Move bubble
-            bubble.style.transform = `translate(${moveX}px, ${moveY}px)`;
-
-            // Check if level
-            if (Math.abs(betaAngle) < 2 && Math.abs(gammaAngle) < 2) {
-                levelStatus.textContent = 'LEVEL';
-                levelStatus.className = 'level-ok';
+        
+        // Change locale
+        localeSelector.addEventListener('change', function() {
+            currentLocale = this.value;
+            localStorage.setItem('clockLocale', currentLocale);
+            updateClock();
+        });
+        
+        // Toggle theme
+        themeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('light-theme');
+            const isLightTheme = document.body.classList.contains('light-theme');
+            localStorage.setItem('lightTheme', isLightTheme);
+        });
+        
+        // Toggle time-only mode
+        timeOnlyToggle.addEventListener('click', function() {
+            document.body.classList.toggle('time-only-mode');
+            const isTimeOnly = document.body.classList.contains('time-only-mode');
+            localStorage.setItem('timeOnly', isTimeOnly);
+            this.textContent = `Time Only: ${isTimeOnly ? 'ON' : 'OFF'}`;
+        });
+        
+        // Fullscreen
+        fullscreenButton.addEventListener('click', function() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+                this.textContent = "Exit Fullscreen";
             } else {
-                levelStatus.textContent = 'NOT LEVEL';
-                levelStatus.className = 'level-not-ok';
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    this.textContent = "Enter Fullscreen";
+                }
             }
+        });
+        
+        // Check if device is in fullscreen mode
+        document.addEventListener('fullscreenchange', function() {
+            fullscreenButton.textContent = document.fullscreenElement ? "Exit Fullscreen" : "Enter Fullscreen";
+        });
+        
+        // Load saved theme
+        if (localStorage.getItem('lightTheme') === 'true') {
+            document.body.classList.add('light-theme');
         }
+        
+        // Load saved time-only mode
+        if (localStorage.getItem('timeOnly') === 'true') {
+            document.body.classList.add('time-only-mode');
+            timeOnlyToggle.textContent = "Time Only: ON";
+        }
+        
+        // Update clock every second
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Auto-hide controls after a few seconds of inactivity
+        const controls = document.querySelector('.controls');
+        let hideTimeout;
+        
+        function showControls() {
+            controls.style.opacity = '1';
+            controls.style.transform = 'translateY(0)';
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(hideControls, 5000);
+        }
+        
+        function hideControls() {
+            controls.style.opacity = '0';
+            controls.style.transform = 'translateY(20px)';
+        }
+        
+        // Show controls on tap/click anywhere
+        document.body.addEventListener('click', showControls);
+        
+        // Initial setup
+        controls.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        showControls();
     </script>
 </body>
 </html>
